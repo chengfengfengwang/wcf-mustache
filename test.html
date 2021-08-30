@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    // function findWordIndex (str, word) {
+    //   const wordLength = word.length;
+    //   return str.indexOf(word) + wordLength
+    // }
+    // function beginScan(str) {
+    //   let pos = 0, resultArr = [], tail = str;
+    //   function scan(endTag) {
+    //     pos += 2;
+    //     tail = str.substring(pos)
+    //   }
+    //   function scanUntil(endTag) {
+    //     const beginPos = pos;
+    //     while (tail.indexOf(endTag) !== 0 && pos < str.length) {
+    //       pos++;
+    //       tail = str.substring(pos)
+    //     };
+    //     const result = str.substring(beginPos, pos);
+    //     // console.log(result)
+    //     return result
+    //   }
+    //   while (pos < str.length) {
+    //     word = scanUntil('{{');
+    //     if (word) {
+    //       resultArr.push(['text', word])
+    //     };
+    //     scan('{{');
+    //     word = scanUntil('}}');
+    //     if (word && word[0] === '#') {
+    //       const tag = word.substring(1);
+    //       const beginTemplateTag = `{{#${tag}}}`;
+    //       const endTemplateTag = `{{/${tag}}}`;
+    //       const newStr = str.substring(str.indexOf(beginTemplateTag) + beginTemplateTag.length, str.indexOf(endTemplateTag))
+    //       // console.log(newStr)
+    //       resultArr.push(['#', tag, beginScan(newStr)])
+    //       // console.log('---', pos)
+    //       tail = str.substring(str.indexOf(endTemplateTag) + endTemplateTag.length);
+    //       pos = pos + newStr.length + endTemplateTag.length + 2;
+    //       // console.log('---', tail)
+    //       // console.log('---', pos)
+    //       // console.log('---', str[pos])
+    //     } else if (word && word[0] !== '#') {
+    //       resultArr.push(['name', word])
+    //       scan('}}');
+    //     }
+    //   }
+    //   return resultArr
+    // }
+    // // const template = `我买了一个{{thing}}，好{{mood}}啊`;
+    // // const template = `<ul>{{#arr}}<li>name: {{name}}, age: {{age}}</li>{{/arr}}</ul>`;
+    // // const template = `<ul>{{#arr}}<li>name: {{name}}, age: {{age}}</li>{{/arr}}</ul>`;
+    // const template = `<ul>{{#arr}}<li><p>name: {{name}}, age: {{age}}</p>{{#hobbys}}<p>{{.}}</p>{{/hobbys}}</li>{{/arr}}</ul>`;
+
+    // console.log(beginScan(template))
+    // // console.log(findWordIndex(template, '{{#arr}}'))
+    // // console.log(findWordIndex(template, '{{/arr}}'))
+
+    function scanStr(str) {
+      const resultArr = [];
+      let nameStartIndex = 0,nameEndIndex = 0;
+      for( let i = 0; i < str.length ; i++) {
+        if (str[i] === '{' && str[i + 1] === '{') {
+          resultArr.push(['text', str.substring(nameEndIndex, i)]);
+          nameStartIndex = i + 2;
+          // i++
+        } else if (str[i] === '}' && str[i + 1] === '}') {
+          nameEndIndex = i;
+          resultArr.push(['name', str.substring(nameStartIndex, nameEndIndex)]);
+          // i++
+        } 
+      };
+      return resultArr
+    }
+    // const str = `我买了一个{{thing}}啊`;
+    const str = `我买了一个{{thing}}，好{{mood}}啊`;
+    console.log(scanStr(str))
+  </script>
+</body>
+
+</html>
