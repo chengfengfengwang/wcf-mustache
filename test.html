@@ -10,81 +10,154 @@
 
 <body>
   <script>
-    // function findWordIndex (str, word) {
-    //   const wordLength = word.length;
-    //   return str.indexOf(word) + wordLength
-    // }
-    // function beginScan(str) {
-    //   let pos = 0, resultArr = [], tail = str;
-    //   function scan(endTag) {
-    //     pos += 2;
-    //     tail = str.substring(pos)
-    //   }
-    //   function scanUntil(endTag) {
-    //     const beginPos = pos;
-    //     while (tail.indexOf(endTag) !== 0 && pos < str.length) {
-    //       pos++;
-    //       tail = str.substring(pos)
-    //     };
-    //     const result = str.substring(beginPos, pos);
-    //     // console.log(result)
-    //     return result
-    //   }
-    //   while (pos < str.length) {
-    //     word = scanUntil('{{');
-    //     if (word) {
-    //       resultArr.push(['text', word])
-    //     };
-    //     scan('{{');
-    //     word = scanUntil('}}');
-    //     if (word && word[0] === '#') {
-    //       const tag = word.substring(1);
-    //       const beginTemplateTag = `{{#${tag}}}`;
-    //       const endTemplateTag = `{{/${tag}}}`;
-    //       const newStr = str.substring(str.indexOf(beginTemplateTag) + beginTemplateTag.length, str.indexOf(endTemplateTag))
-    //       // console.log(newStr)
-    //       resultArr.push(['#', tag, beginScan(newStr)])
-    //       // console.log('---', pos)
-    //       tail = str.substring(str.indexOf(endTemplateTag) + endTemplateTag.length);
-    //       pos = pos + newStr.length + endTemplateTag.length + 2;
-    //       // console.log('---', tail)
-    //       // console.log('---', pos)
-    //       // console.log('---', str[pos])
-    //     } else if (word && word[0] !== '#') {
-    //       resultArr.push(['name', word])
-    //       scan('}}');
-    //     }
+    function ScanStr(str) {
+      this.pos = 0;
+      this.tail = str;
+      this.tokens = [];
+      this.beginSearch();
+      // this.tokens = nestTokens(this.tokens);
+
+    };
+    function nestTokens(tokens) {
+      var nestedTokens = [];
+      var collector = nestedTokens;
+      var sections = [];
+
+      var token, section;
+      for (var i = 0, numTokens = tokens.length; i < numTokens; ++i) {
+        token = tokens[i];
+
+        switch (token[0]) {
+          case '#':
+            collector.push(token);
+            sections.push(token);
+            collector = token[2] = [];
+            break;
+          case '/':
+            section = sections.pop();
+            collector = sections.length > 0 ? sections[sections.length - 1][2] : nestedTokens;
+            break;
+          default:
+            collector.push(token);
+        }
+      }
+      return nestedTokens;
+    }
+    ScanStr.prototype.scanUntil = function (tag) {
+      const searchIndex = this.tail.search(tag);
+      if (searchIndex === -1) {
+        searched = this.tail;
+        this.tail = '';
+      } else {
+        searched = this.tail.substring(0, searchIndex);
+        this.tail = this.tail.substring(searchIndex);
+      }
+      this.pos = this.pos + searched.length;
+
+      return searched
+    }
+    ScanStr.prototype.scan = function (tag) {
+      var match = this.tail.match(tag);
+      if (!match || match.index !== 0) {
+        return '';
+      }
+      var string = match[0];
+
+      this.tail = this.tail.substring(string.length);
+      this.pos += string.length;
+
+      return string;
+    }
+
+    ScanStr.prototype.beginSearch = function () {
+      let word;
+      while (this.tail) {
+        word = this.scanUntil('{{');
+        if (word) {
+          this.tokens.push(['text', word])
+        }
+        if (!this.scan('{{')) {
+          break
+        }
+        word = this.scanUntil('}}');
+        if (word) {
+          if (word[0] === '#') {
+            this.tokens.push(['#', word.substring(1)])
+          } else if (word[0] === '/') {
+            this.tokens.push(['/', word.substring(1)])
+          } else {
+            this.tokens.push(['name', word])
+          }
+        }
+
+        this.scan('}}')
+      }
+    }
+    let resultStr = '';
+    ScanStr.prototype.renderView = function(tokens, data) {
+      
+      for(let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (token[0] === 'name') {
+          resultStr += data[token[1]]
+        } else if (token[0] === 'text') {
+          resultStr += token[1]
+        } else if (token[0] === '#') {
+          const arr = data[token[1]];
+          let arrStr = '';
+          for(const item of arr) {
+            const result = this.renderView(token[2], item);
+            // arrStr += result
+          }
+          // resultStr += arrStr
+          // resultStr += this.renderView(token[2], data[token[1]])
+        }
+      }
+      // console.log(resultStr);
+      return resultStr
+    }
+    
+    // const str = `我买了一个{{thing}}，好{{mood}}啊`;
+    // const str = `<ul>{{#arr}}<li><p>name: {{name}}, age: {{age}}</p>{{#hobbys}}<p>{{.}}</p>{{/hobbys}}</li>{{/arr}}</ul>`
+    const str = `<ul>{{#arr}}<li>{{name}}{{age}}</li>{{/arr}}</ul>`
+    const scanNer = new ScanStr(str);
+    console.log(nestTokens(scanNer.tokens))
+    const value = scanNer.renderView(nestTokens(scanNer.tokens), {
+      arr: [
+        {
+          name: 'w',
+          age: 12
+        },
+        {
+          name: 'c',
+          age: 13
+        }
+      ]
+    });
+    console.log(value)
+    // const arr = [["text","<ul>"],["#","arr"],["name","name"],["#","brr"],["name","name1"],["/","arr"],["/","brr"],["text","</ul>"]];
+
+    // function getArr(arr) {
+    //   let collector =  resultArr = [];
+    //   let sections = [];
+    //   for(let i = 0; i < arr.length; i++) {
+    //     const token = arr[i];
+    //     if (token[0] === 'text' || token[0] === 'name') {
+    //       collector.push(token)
+    //     } else if (token[0] === '#') {
+    //       collector.push(token);
+    //       token[2] = [];
+    //       collector = token[2];
+    //       sections.push(token)
+    //     } else if (token[0] === '/') {
+    //       sections.pop();
+    //       collector = sections.length ? sections[sections.length - 1] : resultArr;
+    //     } 
     //   }
     //   return resultArr
     // }
-    // // const template = `我买了一个{{thing}}，好{{mood}}啊`;
-    // // const template = `<ul>{{#arr}}<li>name: {{name}}, age: {{age}}</li>{{/arr}}</ul>`;
-    // // const template = `<ul>{{#arr}}<li>name: {{name}}, age: {{age}}</li>{{/arr}}</ul>`;
-    // const template = `<ul>{{#arr}}<li><p>name: {{name}}, age: {{age}}</p>{{#hobbys}}<p>{{.}}</p>{{/hobbys}}</li>{{/arr}}</ul>`;
-
-    // console.log(beginScan(template))
-    // // console.log(findWordIndex(template, '{{#arr}}'))
-    // // console.log(findWordIndex(template, '{{/arr}}'))
-
-    function scanStr(str) {
-      const resultArr = [];
-      let nameStartIndex = 0,nameEndIndex = 0;
-      for( let i = 0; i < str.length ; i++) {
-        if (str[i] === '{' && str[i + 1] === '{') {
-          resultArr.push(['text', str.substring(nameEndIndex, i)]);
-          nameStartIndex = i + 2;
-          // i++
-        } else if (str[i] === '}' && str[i + 1] === '}') {
-          nameEndIndex = i;
-          resultArr.push(['name', str.substring(nameStartIndex, nameEndIndex)]);
-          // i++
-        } 
-      };
-      return resultArr
-    }
-    // const str = `我买了一个{{thing}}啊`;
-    const str = `我买了一个{{thing}}，好{{mood}}啊`;
-    console.log(scanStr(str))
+    // console.log(nestTokens(arr))
+    // console.log(getArr(arr))
   </script>
 </body>
 

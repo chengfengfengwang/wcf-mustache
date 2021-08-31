@@ -10,7 +10,10 @@
   <div id="app"></div>
   <script src="./mustache.js"></script>
   <script>
-    const templateStr = `<ul>{{#arr}}<li><p>name: {{name}}, age: {{age}}</p>{{#hobbys}}<p>{{.}}</p>{{/hobbys}}</li>{{/arr}}</ul>`;
+    // const templateStr = `<ul>{{#arr}}<li><p>name: {{name}}, age: {{age}}</p>{{#hobbys}}<p>{{.}}</p>{{/hobbys}}</li>{{/arr}}</ul>`;
+    const templateStr = `<ul>{{#arr}}name: {{name}}{{/arr}}</ul>`
+    // const templateStr = `<h1>我买了一个{{thing}}啊</h1>`;
+    // const templateStr = `{{thing}}啊`;
     const data = {
       arr: [
         {

@@ -251,7 +251,6 @@
     if (openSection)
       throw new Error('Unclosed section "' + openSection[1] + '" at ' + scanner.pos);
     const myTokens = nestTokens(squashTokens(tokens));
-    console.log(myTokens)
     return myTokens;
   }
 
@@ -554,6 +553,7 @@
     var tags = this.getConfigTags(config);
     var tokens = this.parse(template, tags);
     var context = (view instanceof Context) ? view : new Context(view, undefined);
+    console.log('zzz', context)
     return this.renderTokens(tokens, context, partials, template, config);
   };
 
@@ -755,7 +755,6 @@
                           'but "' + typeStr(template) + '" was given as the first ' +
                           'argument for mustache#render(template, view, partials)');
     }
-
     return defaultWriter.render(template, view, partials, config);
   };
 
